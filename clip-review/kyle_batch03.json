@@ -1,0 +1,141 @@
+{
+  "editor": "Kyle (ED5)",
+  "batch": "Batch 03",
+  "delivery_date": "2026-11-11",
+  "output_directory": "Kinroot Content / ED5 Kyle / 2026-11-11",
+  "rules": "People should look approximately 50\u201370 where relevant, natural phone footage not stock or ads (unless explicitly an animation or old photo), 1080p sharp, no watermarks, usernames, captions, or readable brand names. Prefer a 2\u20135 second meaningful action with one second of handles at both ends. Scene description outranks search hints. Record swaps.",
+  "tasks": [
+    {
+      "id": "S5-A01",
+      "description": "Elderly woman in recliner, legs up",
+      "query": "elderly mom recliner legs up",
+      "status": "needs_source"
+    },
+    {
+      "id": "S5-A01_alt",
+      "description": "Elderly woman in recliner, legs up",
+      "query": "elderly mom recliner legs up",
+      "status": "needs_source"
+    },
+    {
+      "id": "S5-A02",
+      "description": "Swollen elderly ankles",
+      "query": "swollen ankles elderly",
+      "status": "needs_source"
+    },
+    {
+      "id": "S5-A02_alt",
+      "description": "Swollen elderly ankles",
+      "query": "swollen ankles elderly",
+      "status": "needs_source"
+    },
+    {
+      "id": "S5-A03",
+      "description": "Window view from inside, empty chair",
+      "query": "looking out window elderly",
+      "status": "needs_source"
+    },
+    {
+      "id": "S5-A03_alt",
+      "description": "Window view from inside, empty chair",
+      "query": "looking out window elderly",
+      "status": "needs_source"
+    },
+    {
+      "id": "S5-A04",
+      "description": "Woman looking down at her own swollen ankles in shower/bathroom",
+      "query": "looking at my swollen ankles",
+      "status": "needs_source"
+    },
+    {
+      "id": "S5-A05",
+      "description": "Slow climb up stairs holding rail",
+      "query": "struggling up stairs heavy legs",
+      "status": "needs_source"
+    },
+    {
+      "id": "S5-X01",
+      "description": "Fibrin animation",
+      "query": "fibrin animation",
+      "status": "needs_source"
+    },
+    {
+      "id": "S5-X02",
+      "description": "Two sisters 55+ walking in a garden",
+      "query": "walking botanical garden friends over 50",
+      "status": "needs_source"
+    },
+    {
+      "id": "S5-B01",
+      "description": "Old photo of an older woman on a recliner, legs up",
+      "query": "vintage photo grandmother recliner",
+      "status": "needs_source"
+    },
+    {
+      "id": "S5-B01_alt",
+      "description": "Old photo of an older woman on a recliner, legs up",
+      "query": "vintage photo grandmother recliner",
+      "status": "needs_source"
+    },
+    {
+      "id": "S5-B02",
+      "description": "Woman looking down at her own puffy ankles",
+      "query": "looking at my swollen ankles",
+      "status": "needs_source"
+    },
+    {
+      "id": "S5-B02_alt",
+      "description": "Woman looking down at her own puffy ankles",
+      "query": "looking at my swollen ankles",
+      "status": "needs_source"
+    },
+    {
+      "id": "S5-C01",
+      "description": "Older woman slowly climbing church steps",
+      "query": "elderly woman church steps",
+      "status": "needs_source"
+    },
+    {
+      "id": "S5-C01_alt",
+      "description": "Older woman slowly climbing church steps",
+      "query": "elderly woman church steps",
+      "status": "needs_source"
+    },
+    {
+      "id": "S5-C02",
+      "description": "Elderly woman pushing a shopping trolley",
+      "query": "elderly woman grocery shopping",
+      "status": "needs_source"
+    },
+    {
+      "id": "S5-C02_alt",
+      "description": "Elderly woman pushing a shopping trolley",
+      "query": "elderly woman grocery shopping",
+      "status": "needs_source"
+    },
+    {
+      "id": "S5-C03",
+      "description": "Two elderly sisters on a sofa",
+      "query": "elderly sisters together",
+      "status": "needs_source"
+    },
+    {
+      "id": "S5-C03_alt",
+      "description": "Two elderly sisters on a sofa",
+      "query": "elderly sisters together",
+      "status": "needs_source"
+    },
+    {
+      "id": "S5-C04",
+      "description": "Elderly woman in a recliner, legs up",
+      "query": "elderly mom recliner legs up",
+      "status": "needs_source"
+    },
+    {
+      "id": "S5-C05",
+      "description": "Woman 55+ looking down at her ankles",
+      "query": "looking at my swollen ankles",
+      "status": "needs_source"
+    }
+  ]
+}

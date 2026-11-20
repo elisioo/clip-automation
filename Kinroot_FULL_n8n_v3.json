@@ -1,0 +1,459 @@
+{
+  "name": "Kinroot — PDF to Social Candidates to Review Site v3",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "kinroot-source",
+        "responseMode": "onReceived",
+        "options": {
+          "responseData": "{\"accepted\":true}"
+        }
+      },
+      "id": "098c5146-882a-4733-a105-5c45535c11d6",
+      "name": "PDF job from Kinroot Website",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -920,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ \"http://kinroot-api:8502/api/jobs/\" + $json.body.job_id + \"/tasks/\" + $json.body.clip_id }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "1132c0f8-43a9-4d4b-84ba-1d2f268d7ba3",
+      "name": "Get clip task from website",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -650,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/ksvan~pinterest-scraper/run-sync-get-dataset-items",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({searchQueries: [$json.pinterest_query],searchType:\"videos\",maxPinsPerSource:3,maxItems:3}) }}",
+        "options": {
+          "timeout": 180000
+        },
+        "contentType": "json"
+      },
+      "id": "6375e331-e51f-4a38-8dc0-9c4142120d50",
+      "name": "Search Pinterest (Apify)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -330,
+        -370
+      ],
+      "continueOnFail": true,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const task = $('Get clip task from website').first().json;\nconst items = $input.all().flatMap(x => Array.isArray(x.json) ? x.json : (Array.isArray(x.json.items) ? x.json.items : [x.json]));\nconst out=[];\nfor (const a of items) {\n const url= a.url || a.pinUrl || '';\n if (!url || !(a.isVideo === true || a.videoUrl)) continue;\n out.push({json:{job_id:task.job_id,clip_id:task.clip_id,platform:'Pinterest',source_url:url,video_url:a.videoUrl||'',title:a.title||'',description:a.description||a.altText||'',status:'candidate_found'}});\n}\nreturn out.length ? out.slice(0,3) : [{json:{job_id:task.job_id,clip_id:task.clip_id,platform:'Pinterest',status:'no_results',error:items.find(x=>x.error)?.error?.message||'No video candidates'}}];"
+      },
+      "id": "76a9abe5-885f-487b-b9f6-cc49609449d3",
+      "name": "Normalize Pinterest candidates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -65,
+        -370
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ \"http://kinroot-api:8502/api/jobs/\" + $json.job_id + \"/candidates\" }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 30000
+        },
+        "contentType": "json"
+      },
+      "id": "c12a4338-0583-48aa-977c-4d1963a06f2b",
+      "name": "Send Pinterest to review website",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        230,
+        -370
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/clockworks~tiktok-scraper/run-sync-get-dataset-items",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({searchQueries: [$json.tiktok_query],searchSection:\"/video\",resultsPerPage:3,shouldDownloadVideos:false}) }}",
+        "options": {
+          "timeout": 180000
+        },
+        "contentType": "json"
+      },
+      "id": "57806e47-c3b5-45fd-b80f-4a1426b0e06e",
+      "name": "Search TikTok (Apify)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -330,
+        -125
+      ],
+      "continueOnFail": true,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const task = $('Get clip task from website').first().json;\nconst items=$input.all().flatMap(x => Array.isArray(x.json) ? x.json : (Array.isArray(x.json.items) ? x.json.items : [x.json]));\nconst out=[];\nfor (const a of items) {\n const url=a.webVideoUrl||a.postUrl||a.shareUrl||a.url||a.video?.url||'';\n if (!url || !url.startsWith('https://')) continue;\n out.push({json:{job_id:task.job_id,clip_id:task.clip_id,platform:'TikTok',source_url:url,video_url:'',title:a.text||a.desc||a.title||'',description:a.description||a.text||'',status:'candidate_found'}});\n}\nreturn out.length ? out.slice(0,3) : [{json:{job_id:task.job_id,clip_id:task.clip_id,platform:'TikTok',status:'no_results',error:'No results or Actor unavailable (check Apify billing and actor runs)'}}];"
+      },
+      "id": "4be1172c-a282-4d6f-a9a9-d0fd85043e5e",
+      "name": "Normalize TikTok candidates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -65,
+        -125
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ \"http://kinroot-api:8502/api/jobs/\" + $json.job_id + \"/candidates\" }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 30000
+        },
+        "contentType": "json"
+      },
+      "id": "b4456e53-751f-4409-b819-f8bd33da4aff",
+      "name": "Send TikTok to review website",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        230,
+        -125
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/quarra~douyin-video-search-scraper/run-sync-get-dataset-items",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({keywords: [$json.douyin_query],maxResultsPerKeyword:3,maxItems:3,contentType:\"videos\"}) }}",
+        "options": {
+          "timeout": 180000
+        },
+        "contentType": "json"
+      },
+      "id": "d9a1a37c-109e-45d3-8de0-8eb520e5c0fd",
+      "name": "Search Douyin (Apify)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -330,
+        120
+      ],
+      "continueOnFail": true,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const task = $('Get clip task from website').first().json;\nconst items=$input.all().flatMap(x => Array.isArray(x.json) ? x.json : (Array.isArray(x.json.items) ? x.json.items : [x.json]));\nconst out=[];\nfor (const a of items) {\n const url=a.awemeUrl||a.shareUrl||a.webVideoUrl||a.url||a.postUrl||'';\n if (!url || !url.startsWith('https://')) continue;\n out.push({json:{job_id:task.job_id,clip_id:task.clip_id,platform:'Douyin',source_url:url,video_url:'',title:a.title||a.desc||'',description:a.description||a.desc||'',status:'candidate_found'}});\n}\nreturn out.length ? out.slice(0,3) : [{json:{job_id:task.job_id,clip_id:task.clip_id,platform:'Douyin',status:'no_results',error:'No results or actor unavailable'}}];"
+      },
+      "id": "4c0bde58-d523-4346-ba45-8c05f4be0061",
+      "name": "Normalize Douyin candidates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -65,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ \"http://kinroot-api:8502/api/jobs/\" + $json.job_id + \"/candidates\" }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 30000
+        },
+        "contentType": "json"
+      },
+      "id": "971414df-3278-4b3d-ad57-f689fbb371c8",
+      "name": "Send Douyin to review website",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        230,
+        120
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://www.googleapis.com/youtube/v3/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendQuery": true,
+        "specifyQuery": "keypair",
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "part",
+              "value": "snippet"
+            },
+            {
+              "name": "type",
+              "value": "video"
+            },
+            {
+              "name": "q",
+              "value": "={{ $json.youtube_query }}"
+            },
+            {
+              "name": "maxResults",
+              "value": "3"
+            },
+            {
+              "name": "videoDefinition",
+              "value": "high"
+            },
+            {
+              "name": "videoLicense",
+              "value": "creativeCommon"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "680fcf9a-90ab-489c-845b-495a9417aa46",
+      "name": "Search YouTube (official API)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -330,
+        365
+      ],
+      "continueOnFail": true,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const task=$('Get clip task from website').first().json;\nconst raws=$input.all();const out=[];\nfor (const item of raws) {\n  for (const v of (item.json.items||[])) {\n    const vid=v.id?.videoId;if(!vid)continue;\n    out.push({json:{job_id:task.job_id,clip_id:task.clip_id,platform:'YouTube',\n      source_url:'https://www.youtube.com/watch?v='+vid,video_url:'',\n      title:v.snippet?.title||'',description:v.snippet?.description||'',\n      status:'candidate_found'}});\n  }\n}\nreturn out.length ? out.slice(0,3) : [{json:{job_id:task.job_id,clip_id:task.clip_id,platform:'YouTube',status:'no_results',error:'No videos or quota/auth issue'}}];"
+      },
+      "id": "44099bdc-b502-424b-95a3-25462dc5c949",
+      "name": "Normalize YouTube candidates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -65,
+        365
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ \"http://kinroot-api:8502/api/jobs/\" + $json.job_id + \"/candidates\" }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 30000
+        },
+        "contentType": "json"
+      },
+      "id": "36c04846-619d-4cdc-8743-d733677c6901",
+      "name": "Send YouTube to review website",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        230,
+        365
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "content": "# KINROOT · Website ↔ n8n Social Sourcing\n\n**Workflow is dynamic**, not hardcoded to one clip. Run it by uploading the PDF in the Kinroot website and clicking **Start n8n social search**.\n\n1. Import this JSON into the *same local n8n* running alongside your Kinroot Docker website.\n2. Reconnect **Bearer Auth** in all 3 Apify HTTP nodes and **Query Auth** in the YouTube HTTP node. Credentials are intentionally absent from this file.\n3. **Publish** workflow to activate production webhook `/webhook/kinroot-source`.\n4. Restart the updated website: `docker compose -f compose.clip-review.yaml up -d --build`.\n5. Run **one clip** first; every new clip can start 3 Apify Actors and 1 YouTube API request. Actor runs may incur charges or exhaust free credits.\n\nCandidate results go to the website, where Groq can rank their metadata. This does NOT mean legal rights, HD quality, or visual scene match have been proven.\n\n**Facebook** requires a separate verified keyword-search provider. Facebook page-based scrapers are not generic search. No fake Facebook actor is included.\n\nDownloading third-party videos is NOT silently enabled. Supported direct media can be acquired and trimmed only after rights confirmation. No bypassing access restrictions.\n",
+        "height": 485,
+        "width": 690,
+        "color": 4
+      },
+      "id": "bd5c4def-320e-480f-934e-57068a6f1bb0",
+      "name": "START HERE — IMPORTANT",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -900,
+        -670
+      ]
+    }
+  ],
+  "connections": {
+    "PDF job from Kinroot Website": {
+      "main": [
+        [
+          {
+            "node": "Get clip task from website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get clip task from website": {
+      "main": [
+        [
+          {
+            "node": "Search Pinterest (Apify)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Search TikTok (Apify)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Search Douyin (Apify)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Search YouTube (official API)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Pinterest (Apify)": {
+      "main": [
+        [
+          {
+            "node": "Normalize Pinterest candidates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Pinterest candidates": {
+      "main": [
+        [
+          {
+            "node": "Send Pinterest to review website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search TikTok (Apify)": {
+      "main": [
+        [
+          {
+            "node": "Normalize TikTok candidates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize TikTok candidates": {
+      "main": [
+        [
+          {
+            "node": "Send TikTok to review website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Douyin (Apify)": {
+      "main": [
+        [
+          {
+            "node": "Normalize Douyin candidates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Douyin candidates": {
+      "main": [
+        [
+          {
+            "node": "Send Douyin to review website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search YouTube (official API)": {
+      "main": [
+        [
+          {
+            "node": "Normalize YouTube candidates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize YouTube candidates": {
+      "main": [
+        [
+          {
+            "node": "Send YouTube to review website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "active": false,
+  "tags": []
+}

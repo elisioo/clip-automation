@@ -1,0 +1,37 @@
+services:
+  kinroot-review:
+    build: ./clip-review
+    container_name: kinroot-review
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8501:8501"
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - GROQ_TEXT_MODEL=${GROQ_TEXT_MODEL:-openai/gpt-oss-20b}
+      - GROQ_VISION_MODEL=${GROQ_VISION_MODEL:-qwen/qwen3.8-27b}
+      - KINROOT_METADATA_AI=${KINROOT_METADATA_AI:-true}
+      - KINROOT_MATCH_THRESHOLD=${KINROOT_MATCH_THRESHOLD:-70}
+      - KINROOT_MAX_VISION_WINDOWS=${KINROOT_MAX_VISION_WINDOWS:-4}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4.1-mini}
+      - KINROOT_N8N_WEBHOOK=http://kinroot-n8n:5678/webhook/kinroot-source
+    volumes:
+      - ./clip-review/data:/app/data
+  kinroot-api:
+    build: ./clip-review
+    container_name: kinroot-api
+    restart: unless-stopped
+    command: ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8502", "--workers", "1"]
+    expose:
+      - "8502"
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - GROQ_TEXT_MODEL=${GROQ_TEXT_MODEL:-openai/gpt-oss-20b}
+      - GROQ_VISION_MODEL=${GROQ_VISION_MODEL:-qwen/qwen3.8-27b}
+      - KINROOT_METADATA_AI=${KINROOT_METADATA_AI:-true}
+      - KINROOT_MATCH_THRESHOLD=${KINROOT_MATCH_THRESHOLD:-70}
+      - KINROOT_MAX_VISION_WINDOWS=${KINROOT_MAX_VISION_WINDOWS:-4}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4.1-mini}
+    volumes:
+      - ./clip-review/data:/app/data
